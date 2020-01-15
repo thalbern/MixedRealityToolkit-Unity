@@ -6,6 +6,7 @@ using Microsoft.MixedReality.Toolkit.UI;
 using Microsoft.MixedReality.Toolkit.Utilities.Editor;
 using System.Reflection;
 using UnityEditor;
+using UnityEditor.Events;
 using UnityEngine;
 
 namespace Microsoft.MixedReality.Toolkit.Editor
@@ -266,6 +267,36 @@ namespace Microsoft.MixedReality.Toolkit.Editor
                 if (helpURL != null)
                 {
                     InspectorUIUtility.RenderDocumentationButton(helpURL.URL);
+                }
+            }
+
+            var eventRouter = button.GetComponent<PhysicalPressEventRouter>();
+            if (eventRouter != null)
+            {
+                var buttonContent = new GUIContent()
+                {
+                    //image = HelpIcon,
+                    text = " Wire up events",
+                    tooltip = "Wire up pressable button events with physical event press router",
+                };
+
+
+                if (GUILayout.Button(buttonContent, EditorStyles.miniButton))
+                {
+                    // wire up events
+                    Undo.RecordObject(button, string.Concat($"Wire up events"));
+                    UnityEventTools.AddPersistentListener(button.TouchBegin, eventRouter.OnHandPressTouched);
+                    UnityEventTools.AddPersistentListener(button.TouchEnd, eventRouter.OnHandPressCompleted);
+                    UnityEventTools.AddPersistentListener(button.ButtonPressed, eventRouter.OnHandPressTriggered);
+                    UnityEventTools.AddPersistentListener(button.ButtonReleased, eventRouter.OnHandPressCompleted);
+
+                    // set interactable if possible
+                    var interactable = button.GetComponent<Interactable>();
+                    if (interactable)
+                    {
+                        Undo.RecordObject(eventRouter, "Setup Interactable");
+                        eventRouter.routingTarget = interactable;
+                    }
                 }
             }
 
