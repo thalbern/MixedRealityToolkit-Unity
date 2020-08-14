@@ -1,4 +1,6 @@
-# Bounding box
+# Bounding box - Deprecated
+
+Note: Bounding box is deprecated with version 2.5 - please consider updating to new bounds control by using the migration tool.
 
 ![Bounding box](../Documentation/Images/BoundingBox/MRTK_BoundingBox_Main.png)
 

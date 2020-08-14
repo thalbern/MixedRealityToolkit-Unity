@@ -1,30 +1,30 @@
-# Bounding box
+# Bounds control
 
 ![Bounding box](../Documentation/Images/BoundingBox/MRTK_BoundingBox_Main.png)
 
-The [`BoundingBox.cs`](xref:Microsoft.MixedReality.Toolkit.UI.BoundingBox) script provides basic functionality for transforming objects in mixed reality. A bounding box will show a cube around the hologram to indicate that it can be interacted with. Handles on the corners and edges of the cube allow scaling or rotating the object. The bounding box also reacts to user input. On HoloLens 2, for example, the bounding box responds to finger proximity, providing visual feedback to help perceive the distance from the object. All interactions and visuals can be easily customized.
+The [`BoundsControl.cs`](xref:Microsoft.MixedReality.Toolkit.UI.BoundsControl) script provides basic functionality for transforming objects in mixed reality. A bounds control will show a cube around the hologram to indicate that it can be interacted with. Handles on the corners and edges of the cube allow translating, rotating or scaling the object. The bounds control also reacts to user input. On HoloLens 2, for example, the bounds control responds to finger proximity, providing visual feedback to help perceive the distance from the object. All interactions and visuals can be easily customized.
 
-For more information, see [Bounding box and App bar](https://docs.microsoft.com/windows/mixed-reality/app-bar-and-bounding-box) in the Windows Dev Center.
+For more information, see [Bounds Control and App bar](https://docs.microsoft.com/windows/mixed-reality/app-bar-and-bounding-box) in the Windows Dev Center.
 
 ## Example scene
 
-You can find examples of bounding box configurations in the `BoundingBoxExamples` scene.
+You can find examples of bounds control configurations in the `BoundsControlExamples` scene.
 
 <img src="../Documentation/Images/BoundingBox/MRTK_BoundingBox_Examples.png">
 
-## How to add and configure a bounding box using Unity Inspector
+## How to add and configure a bounds control using Unity Inspector
 
 1. Add Box Collider to an object
-2. Assign `BoundingBox` script to an object
+2. Assign `BoundsControl` script to an object
 3. Configure options, such as 'Activation' methods (see [Inspector properties](#inspector-properties) section below)
-4. (Optional) Assign prefabs and materials for a HoloLens 2 style bounding box (see [Handle styles](#handle-styles) section below)
+4.TODO EXPLAIN CONFIGURATIONS (Optional) Assign prefabs and materials for a HoloLens 2 style bounding box (see [Handle styles](#handle-styles) section below)
 
 > [!NOTE]
 > Use *Target Object* and *Bounds Override* field in the inspector to assign specific object and collider in the object with multiple child components.
 
-![Bounding Box](../Documentation/Images/BoundingBox/MRTK_BoundingBox_Assign.png)
+TODO EXCHANGE IMAGE![Bounds Control](../Documentation/Images/BoundingBox/MRTK_BoundingBox_Assign.png)
 
-## How to add and configure a bounding box in the code
+## How to add and configure a bounds control in the code
 
 1. Instantiate cube GameObject
 
@@ -32,14 +32,14 @@ You can find examples of bounding box configurations in the `BoundingBoxExamples
     GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
     ```
 
-1. Assign `BoundingBox` script to an object with collider, using AddComponent<>()
+1. Assign `BoundsControl` script to an object with collider, using AddComponent<>()
 
     ```c#
-    private BoundingBox bbox;
-    bbox = cube.AddComponent<BoundingBox>();
+    private BoundsControl bc;
+    bc = cube.AddComponent<BoundsControl>();
     ```
 
-1. Configure options (see [Inspector properties](#inspector-properties) section below)
+1. TODO ADJUST TO CONFIGS Configure options (see [Inspector properties](#inspector-properties) section below)
 
     ```c#
     // Make the scale handles large
@@ -50,12 +50,13 @@ You can find examples of bounding box configurations in the `BoundingBoxExamples
     bbox.ShowRotationHandleForZ = false;
     ```
 
-1. (Optional) Assign prefabs and materials for a HoloLens 2 style bounding box. This still requires assignments through the inspector since the materials and prefabs should be dynamically loaded.
+1. TODO IS THIS NEEDED(Optional) Assign prefabs and materials for a HoloLens 2 style bounds control. This still requires assignments through the inspector since the materials and prefabs should be dynamically loaded.
 
 > [!NOTE]
 > Using Unity's 'Resources' folder or [Shader.Find]( https://docs.unity3d.com/ScriptReference/Shader.Find.html) for dynamically loading shaders is not recommended since shader permutations may be missing at runtime.
 
 ```c#
+TODO UPDATE THIS SECTION
 bbox.BoxMaterial = [Assign BoundingBox.mat]
 bbox.BoxGrabbedMaterial = [Assign BoundingBoxGrabbed.mat]
 bbox.HandleMaterial = [Assign BoundingBoxHandleWhite.mat]
@@ -69,7 +70,9 @@ bbox.RotationHandleSize = 0.016f;
 bbox.RotateHandleColliderPadding = 0.016f;
 ```
 
-### Example: Set minimum, maximum bounding box scale using MinMaxScaleConstraint
+### Example: Set minimum, maximum bounds control scale using MinMaxScaleConstraint
+
+TODO ADD SECTION ABOUT CONSTRAINT MANAGER SUPPORT - MOVE CONSTRAINT MANAGER INTO ITs OWN FILE OR LINK TO IT
 
 To set the minimum and maximum scale, use the [`MinMaxScaleConstraint`](xref:Microsoft.MixedReality.Toolkit.UI.MinMaxScaleConstraint). You can also use MinMaxScaleConstraint to set minimum and maximum scale for [`ManipulationHandler`](xref:Microsoft.MixedReality.Toolkit.UI.ManipulationHandler).
 
