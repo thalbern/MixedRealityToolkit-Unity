@@ -6,6 +6,8 @@ using Microsoft.MixedReality.Toolkit.UI.BoundsControlTypes;
 using Microsoft.MixedReality.Toolkit.UI;
 using UnityEditor;
 using UnityEngine;
+using Boo.Lang;
+using System.Collections;
 
 namespace Microsoft.MixedReality.Toolkit.Utilities
 {
@@ -14,18 +16,29 @@ namespace Microsoft.MixedReality.Toolkit.Utilities
     /// </summary>
     public class BoundsControlMigrationHandler : IMigrationHandler
     {
+
+        private Stack ToUpgradeList = new Stack();
+
         /// <inheritdoc />
         public bool CanMigrate(GameObject gameObject)
         {
             return gameObject.GetComponent<BoundingBox>() != null;
         }
 
-        /// <inheritdoc />
-        public void Migrate(GameObject gameObject)
+        private void BuildPrefabUpgradeHierarchy(GameObject prefabRoot, GameObject currentGameObject)
+        {
+            GameObject parentPrefab = PrefabUtility.GetCorrespondingObjectFromSource(currentGameObject);
+            if (parentPrefab != prefabRoot)
+            {
+                ToUpgradeList.Push(parentPrefab);
+                BuildPrefabUpgradeHierarchy(prefabRoot, parentPrefab);
+            }
+        }
+
+        private void MigratePropertyValues(GameObject gameObject)
         {
             var boundingBox = gameObject.GetComponent<BoundingBox>();
-            var boundsControl = gameObject.AddComponent<BoundsControl>();
-
+            var boundsControl = gameObject.GetComponent<BoundsControl>();
             boundsControl.enabled = boundingBox.enabled;
 
             {
@@ -73,17 +86,145 @@ namespace Microsoft.MixedReality.Toolkit.Utilities
 
             // look in the scene for app bars and upgrade them too to point to the new component
             MigrateAppBar(boundingBox, boundsControl);
+        }
+        /// <inheritdoc />
+        public void Migrate(GameObject gameObject)
+        {
+            //string scenePath = gameObject.scene.path;
+            var boundingBox = gameObject.GetComponent<BoundingBox>();
+            
+            // build our upgrade stack
+            GameObject componentOrigin = gameObject;
+            ToUpgradeList.Push(boundingBox);
+            bool isPartOfPRefab = PrefabUtility.IsPartOfAnyPrefab(boundingBox);
+            if (isPartOfPRefab)
+            {
+            Object sourceObject = boundingBox;
+                
+                //BoundingBox rootPrefabBox = PrefabUtility.GetCorrespondingObjectFromOriginalSource(boundingBox);
+                while (sourceObject != null)
+                {
+                    //string pathToPrefab = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(sourceObject);
+                    // Object rootPrefabObject = PrefabUtility.GetCorrespondingObjectFromOriginalSource(sourceObject);//, pathToPrefab);
+                    //var rootPrefabObject = PrefabUtility.LoadPrefabContents(rootPrefabObject);
+                    var rootPrefabObject = PrefabUtility.GetCorrespondingObjectFromSource(sourceObject);
+                    if (rootPrefabObject != null)
+                    {
+                        ToUpgradeList.Push(rootPrefabObject);
+                    }
+                    componentOrigin = ((BoundingBox)sourceObject).gameObject;
+                    sourceObject = rootPrefabObject;
+                }
+
+                //GameObject rootPrefabObject = rootPrefabBox.gameObject;
+                //if (rootPrefabObject != gameObject)
+                //{
+                //    componentOrigin = rootPrefabObject;
+                //    BuildPrefabUpgradeHierarchy(rootPrefabObject, gameObject);
+                //    ToUpgradeList.Push(rootPrefabObject);
+                //}
+            }
+
+           // if (isPartOfPRefab)
 
             {
-                Undo.RecordObject(gameObject, "Removing obsolete BoundingBox component");
-                // destroy obsolete component
-                Object.DestroyImmediate(boundingBox);
+                while (ToUpgradeList.Count != 0)
+                {
+                    BoundingBox elementToUpgrade = (BoundingBox)ToUpgradeList.Pop();
+                    //PrefabAssetType prefabType = PrefabUtility.GetPrefabAssetType(elementToUpgrade);
+                    elementToUpgrade.gameObject.EnsureComponent<BoundsControl>();
+                    MigratePropertyValues(elementToUpgrade.gameObject);
+                    if (elementToUpgrade != boundingBox)
+                    {
+                        PrefabUtility.SaveAsPrefabAsset(elementToUpgrade.gameObject, elementToUpgrade.gameObject.scene.path);
+                    }
+                    //if (prefabType == PrefabAssetType.Regular || prefabType == PrefabAssetType.Variant)
+                    //{
+                    //    // load prefab root and add component there
+                    //    //string assetPath = elementToUpgrade.scene.path;
+                    //    string assetPath = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(elementToUpgrade);
+                    //    var prefabObject = UnityEditor.PrefabUtility.LoadPrefabContents(assetPath);
+                    //    if (elementToUpgrade == componentOrigin)
+                    //    {
+                    //        prefabObject.EnsureComponent<BoundsControl>();
+                    //    }
+                    //    MigratePropertyValues(prefabObject);
+                    //    PrefabUtility.SaveAsPrefabAsset(prefabObject, assetPath);
+                    //    PrefabUtility.UnloadPrefabContents(prefabObject);
+                    //}
+                    //else
+                    //{
+                    //    if (elementToUpgrade == componentOrigin)
+                    //    {
+                    //        // add component to gameobject directly
+                    //        elementToUpgrade.AddComponent<BoundsControl>();
+                    //    }
+                    //    MigratePropertyValues(elementToUpgrade);
+                   // }
+                }
             }
-        }
 
-        private string GenerateUniqueConfigName(string directory, GameObject migratingFrom, string configName)
-        {
-            return directory + "/" + migratingFrom.name + migratingFrom.GetInstanceID() + configName + ".asset";
+
+            var originBox = componentOrigin.GetComponent<BoundingBox>();
+            if (originBox != boundingBox)
+            {
+                GameObject originBoxGo = originBox.gameObject;
+                Object.DestroyImmediate(originBox);
+                PrefabUtility.SaveAsPrefabAsset(originBoxGo, originBoxGo.scene.path);
+            }
+            else
+            {
+                Object.DestroyImmediate(originBox);
+
+            }
+
+
+            //if (componentOrigin != gameObject)
+            //{
+
+            //}
+            //else
+            //{
+            //    Object.DestroyImmediate(boundingBox);
+            //}
+            /*var boundsControl = */
+
+            // upgrade every hierarchy level of our prefab
+            //while (ToUpgradeList.Count != 0)
+            //{
+            //    GameObject elementToUpgrade = (GameObject)ToUpgradeList.Pop();
+            //    MigratePropertyValues(elementToUpgrade);
+
+            //    PrefabAssetType prefabType = PrefabUtility.GetPrefabAssetType(elementToUpgrade);
+            //    if (prefabType == PrefabAssetType.Regular || prefabType == PrefabAssetType.Variant)
+            //    {
+            //        string assetPath = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(elementToUpgrade);
+            //        PrefabUtility.SaveAsPrefabAsset(elementToUpgrade, assetPath);
+            //    }
+            //}
+
+            
+//todo
+            //{
+            //    Undo.RecordObject(gameObject, "Removing obsolete BoundingBox component");
+            //    // destroy obsolete component
+            //    if (isPartOfPRefab)
+            //    {
+            //        // destroy in prefab
+            //        var prefabBox = componentOrigin.GetComponent<BoundingBox>();
+            //        Object.DestroyImmediate(prefabBox);
+            //        PrefabAssetType prefabType = PrefabUtility.GetPrefabAssetType(componentOrigin);
+            //        if (prefabType == PrefabAssetType.Regular || prefabType == PrefabAssetType.Variant)
+            //        {
+            //            string assetPath = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(componentOrigin);
+            //            PrefabUtility.SaveAsPrefabAsset(componentOrigin, assetPath);
+            //        }
+            //    }
+            //    else
+            //    {
+            //        Object.DestroyImmediate(boundingBox);
+            //    }
+            //}
         }
 
         #region Flags Migration
